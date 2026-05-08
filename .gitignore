@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.env
+*.cache
+*.pytest_cache/
+*.ipynb_checkpoints/
+
+# Data and model artifacts
+/data/
+/models/
+*.joblib
+*.pkl
+*.parquet
+
+# Deployment
+# Procfile and runtime.txt are required for platform deployment

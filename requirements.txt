@@ -1,0 +1,9 @@
+flask
+polars
+pandas
+scikit-learn
+xgboost
+shap
+joblib
+airportsdata
+gunicorn
