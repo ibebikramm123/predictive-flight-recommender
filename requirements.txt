@@ -7,3 +7,4 @@ joblib==1.4.2
 Flask==3.1.0
 gunicorn==23.0.0
 airportsdata==20260315
+pyarrow==20.0.0
