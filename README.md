@@ -45,7 +45,15 @@ A professional AI-powered flight recommendation system that predicts flight pric
    python backend/server.py
    ```
 
-3. Deploy to a hosting service such as Heroku or Railway.
+3. Deploy to a hosting service such as Render, Heroku, or Railway.
+
+Render example:
+1. Go to https://dashboard.render.com and connect your GitHub repository.
+2. Create a new Web Service.
+3. Select the `main` branch.
+4. Use the default build command and start command from `render.yaml`:
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `gunicorn backend.server:app --log-file -`
 
 Heroku example:
 ```bash
@@ -56,7 +64,7 @@ git commit -m "Deploy flight recommender"
 git push heroku main
 ```
 
-The repository includes a `Procfile` for Gunicorn and `runtime.txt` for Python runtime selection.
+The repository includes a `Procfile`, `runtime.txt`, and `render.yaml` for deployment.
 
 ## Real-Life Deployment
 

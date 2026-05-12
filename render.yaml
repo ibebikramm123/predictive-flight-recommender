@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: predictive-flight-recommender
+    env: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.server:app --log-file -
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

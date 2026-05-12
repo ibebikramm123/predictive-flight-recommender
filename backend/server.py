@@ -1,6 +1,7 @@
 
 
 
+import os
 import sys
 import math
 from pathlib import Path
@@ -315,4 +316,6 @@ def chat():
     return jsonify({"response": response})
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get("PORT", 5001))
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() in ("1", "true", "yes")
+    app.run(host="0.0.0.0", port=port, debug=debug)
