@@ -1,9 +1,8 @@
-flask
-polars
-pandas
-scikit-learn
-xgboost
-shap
-joblib
-airportsdata
-gunicorn
+scikit-learn==1.6.1
+xgboost==3.0.4
+numpy==2.0.2
+pandas==2.2.3
+polars==1.21.0
+joblib==1.4.2
+Flask==3.1.0
+gunicorn==23.0.0
