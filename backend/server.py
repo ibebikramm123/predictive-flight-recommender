@@ -17,7 +17,7 @@ from src.recommend import filter_candidates, recommend
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-DATA = ROOT / "data/processed/features.parquet"
+DATA = ROOT / "data/processed/features_deploy.parquet"
 
 # Load once at startup
 DF = pl.read_parquet(DATA).to_pandas()
