@@ -1,11 +1,6 @@
 services:
   - type: web
-    name: predictive-flight-recommender
+    name: flight-recommendation-system
     env: python
-    plan: free
-    branch: main
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn backend.server:app --log-file -
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
