@@ -549,7 +549,22 @@
     if(!from || !to){errEl.textContent = "Please select both origin and destination."; return;}
     if(from === to){errEl.textContent = "Origin and destination cannot be the same."; return;}
     if(!date){errEl.textContent = "Choose a departure date."; return;}
+    const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const selectedDate = new Date(date);
+
+if(selectedDate < today){
+  errEl.textContent = "Departure date cannot be in the past.";
+  return;
+}
     if(returnDate && returnDate < date){errEl.textContent = "Return date must be on or after departure date."; return;}
+    const selectedReturnDate = returnDate ? new Date(returnDate) : null;
+
+if(selectedReturnDate && selectedReturnDate < today){
+  errEl.textContent = "Return date cannot be in the past.";
+  return;
+}
     if(!maxPrice || maxPrice < 100){errEl.textContent = "Select a max price using the slider."; return;}
 
     lastQuery = {from,to,date,returnDate,stops: stops || "",maxPrice,preferredAirline};
