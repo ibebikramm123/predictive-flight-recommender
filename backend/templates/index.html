@@ -564,8 +564,19 @@
     // read input value robustly (handles prefilled UI values that may not have fired input events)
     function readInputValue(el){
       if(!el) return "";
+      // prefer .value
       const v = (el.value || "").toString().trim();
       if(v) return v;
+      // for <input type="date"> browsers expose valueAsDate
+      try{
+        if(el.type === 'date' && el.valueAsDate instanceof Date && !isNaN(el.valueAsDate)){
+          const d = el.valueAsDate;
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const dd = String(d.getDate()).padStart(2,'0');
+          return `${yyyy}-${mm}-${dd}`;
+        }
+      }catch(e){}
       try{ const attr = el.getAttribute && el.getAttribute('value'); if(attr) return attr.toString().trim(); }catch(e){}
       if(el.defaultValue) return el.defaultValue.toString().trim();
       return "";
