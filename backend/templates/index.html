@@ -188,6 +188,7 @@
 
     .result-card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow2);padding:.85rem 1rem;display:flex;justify-content:space-between;gap:14px;align-items:center;transition:transform .15s ease, border .2s ease}
     .result-card:hover{transform:translateY(-2px);border-color:rgba(10,60,255,0.25)}
+    .result-card.sold-out{opacity:.75;border-color:#e5e7eb;}
     .airline{display:flex;align-items:center;gap:.8rem;min-width:160px}
     .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg, rgba(10,60,255,0.18), rgba(11,28,63,0.18));border:1px solid rgba(10,60,255,0.18);display:grid;place-items:center;font-weight:900;color:#0b1c3f;flex-shrink:0}
     .airline .name{font-weight:900}
@@ -198,6 +199,7 @@
     .price .note{color:var(--muted);font-size:.82rem;margin-top:2px}
     .book{margin-top:.55rem;width:100%;padding:.55rem .7rem;border-radius:12px;font-weight:900;background:rgba(10,60,255,0.10);border:1px solid rgba(10,60,255,0.20);color:#0b1c3f;cursor:pointer;transition:transform .15s ease}
     .book:hover{transform:translateY(-1px)}
+    .book[disabled]{background:#f3f4f6;color:#6b7280;border-color:#d1d5db;cursor:not-allowed;transform:none;}
 
     .filters{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow2);padding:1rem;position:sticky;top:88px}
     .filters h3{font-size:1rem;font-weight:900;margin-bottom:.75rem}
@@ -234,6 +236,10 @@
     .seat{padding:10px 0;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:800}
     .seat.selected{background:rgba(10,60,255,.12);border-color:rgba(10,60,255,.5);color:#0b1c3f}
     .seat.booked{background:#e5e7eb;color:#9ca3af;cursor:not-allowed}
+    .stepper{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .stepper input{width:62px;padding:.5rem .6rem;border:0;text-align:center;font-weight:800}
+    .stepper-btn{background:#fff;border:0;padding:.45rem .7rem;cursor:pointer;font-weight:900}
+    .stepper-btn:hover{background:rgba(10,60,255,0.04)}
     .chat-modal{
       position:fixed;
       bottom:90px;
@@ -347,6 +353,13 @@
           <div class="field"><label>To <span class="hint">Airport</span></label><select id="to"></select></div>
           <div class="field"><label>Departure <span class="hint">Date</span></label><input type="date" id="date" /></div>
           <div class="field"><label>Return <span class="hint">Optional</span></label><input type="date" id="returnDate" /></div>
+          <div class="field"><label>Seats <span class="hint">Number of travelers</span></label>
+            <div class="stepper" data-suffix="">
+              <button type="button" class="stepper-btn" onclick="changeSeatCount(-1,'')">−</button>
+              <input type="text" id="seatCount" value="1" />
+              <button type="button" class="stepper-btn" onclick="changeSeatCount(1,'')">+</button>
+            </div>
+          </div>
           <div class="field"><label>Stops <span class="hint">Preference</span></label><select id="stops"><option value="" selected>Select stops</option>
             <option value="0">Direct (0)</option><option value="1">1 stop</option><option value="2">2 stops</option><option value="3">3+ stops</option></select></div>
           <div class="field"><label>Preferred Airline <span class="hint">Optional</span></label><select id="preferredAirline"><option value="">No preference</option>
@@ -378,6 +391,13 @@
           <div class="field"><label>To <span class="hint">Airport</span></label><select id="to2"></select></div>
           <div class="field"><label>Departure <span class="hint">Date</span></label><input type="date" id="date2" /></div>
           <div class="field"><label>Return <span class="hint">Optional</span></label><input type="date" id="returnDate2" /></div>
+          <div class="field"><label>Seats <span class="hint">Number of travelers</span></label>
+            <div class="stepper" data-suffix="2">
+              <button type="button" class="stepper-btn" onclick="changeSeatCount(-1,'2')">−</button>
+              <input type="text" id="seatCount2" value="1" />
+              <button type="button" class="stepper-btn" onclick="changeSeatCount(1,'2')">+</button>
+            </div>
+          </div>
           <div class="field"><label>Stops <span class="hint">Preference</span></label><select id="stops2"><option value="" selected>Select stops</option><option value="0">Direct (0)</option><option value="1">1 stop</option><option value="2">2 stops</option><option value="3">3+ stops</option></select></div>
           <div class="field"><label>Preferred Airline <span class="hint">Optional</span></label><select id="preferredAirline2"><option value="">No preference</option><option value="Delta">Delta</option><option value="United">United</option><option value="American Airlines">American Airlines</option><option value="JetBlue Airways">JetBlue</option><option value="Alaska Airlines">Alaska</option><option value="Spirit Airlines">Spirit</option><option value="Frontier Airlines">Frontier</option></select></div>
           <div class="field" style="grid-column:1/-1;"><label>Max price <span class="hint">Use slider</span></label><div class="range-row"><input id="priceRange2" type="range" min="100" max="3000" step="50" value="800" /><div class="price-pill">$<span id="priceValue2">800</span></div></div><div class="meta" style="margin-top:.45rem">Tip: Keep it higher to see more options.</div></div>
@@ -431,8 +451,9 @@
       <div class="booking-summary" id="bookingSummary"></div>
       <div class="booking-form">
         <label>Passengers</label>
-        <select id="passengerCount" onchange="renderPassengerFields()"><option value="1">1 passenger</option><option value="2">2 passengers</option><option value="3">3 passengers</option><option value="4">4 passengers</option></select>
+        <input type="number" id="passengerCount" readonly min="1" max="10" value="1" />
         <div id="passengerFields"></div>
+        <div id="seatStatus" class="meta" style="margin-bottom:12px;color:var(--muted);font-size:.95rem"></div>
         <label>Seat Selection</label>
         <div class="seat-grid" id="seatGrid"></div>
         <label>Payment Simulation</label>
@@ -489,7 +510,7 @@
   wireRange('priceRange2','priceValue2');
 
   function syncHomeToSearch(){
-    [["from","from2"],["to","to2"],["date","date2"],["returnDate","returnDate2"],["stops","stops2"],["preferredAirline","preferredAirline2"],["priceRange","priceRange2"]].forEach(([a,b]) => {
+    [["from","from2"],["to","to2"],["date","date2"],["returnDate","returnDate2"],["seatCount","seatCount2"],["stops","stops2"],["preferredAirline","preferredAirline2"],["priceRange","priceRange2"]].forEach(([a,b]) => {
       const src = document.getElementById(a);
       const dest = document.getElementById(b);
       if(src && dest) dest.value = src.value;
@@ -501,9 +522,9 @@
 
   function resetSearch(suffix=""){
     const s = String(suffix);
-    ["from","to","date","returnDate","stops","preferredAirline"].forEach(id => {
+    ["from","to","date","returnDate","seatCount","stops","preferredAirline"].forEach(id => {
       const el = document.getElementById(id+s) || document.getElementById(id);
-      if(el) el.value = "";
+      if(el) el.value = id === "seatCount" ? "1" : "";
     });
     const range = document.getElementById('priceRange'+s) || document.getElementById('priceRange');
     const val = document.getElementById('priceValue'+s) || document.getElementById('priceValue');
@@ -532,6 +553,7 @@
     const toEl = document.getElementById('to'+s) || document.getElementById('to');
     const dateEl = document.getElementById('date'+s) || document.getElementById('date');
     const returnDateEl = document.getElementById('returnDate'+s) || document.getElementById('returnDate');
+    const seatCountEl = document.getElementById('seatCount'+s) || document.getElementById('seatCount');
     const stopsEl = document.getElementById('stops'+s) || document.getElementById('stops');
     const airlineEl = document.getElementById('preferredAirline'+s) || document.getElementById('preferredAirline');
     const rangeEl = document.getElementById('priceRange'+s) || document.getElementById('priceRange');
@@ -541,6 +563,7 @@
     const to = (toEl?.value || "").trim().toUpperCase();
     const date = dateEl?.value || "";
     const returnDate = returnDateEl?.value || "";
+    const seatCount = Number((seatCountEl?.value || "1").replace(/\D/g,'')) || 1;
     const stops = stopsEl?.value;
     const preferredAirline = (airlineEl?.value || "").trim();
     const maxPrice = Number(rangeEl?.value || 0);
@@ -565,9 +588,10 @@ if(selectedReturnDate && selectedReturnDate < today){
   errEl.textContent = "Return date cannot be in the past.";
   return;
 }
+    if(!seatCount || seatCount < 1){errEl.textContent = "Enter a valid seat count of at least 1."; return;}
     if(!maxPrice || maxPrice < 100){errEl.textContent = "Select a max price using the slider."; return;}
 
-    lastQuery = {from,to,date,returnDate,stops: stops || "",maxPrice,preferredAirline};
+    lastQuery = {from,to,date,returnDate,seatCount,stops: stops || "",maxPrice,preferredAirline};
     selectedOutbound = null;
     selectedReturn = null;
     selectedSeats = [];
@@ -613,6 +637,14 @@ if(selectedReturnDate && selectedReturnDate < today){
     else if(mode === "fewestStops") copy.sort((a,b) => num(a.stops_est) - num(b.stops_est) || num(a.pred_price) - num(b.pred_price));
     return copy;
   }
+
+  function applySort(mode){
+    currentSort = mode;
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.sort === mode);
+    });
+    renderRealResults(realOutbound, realInbound);
+  }
   function formatFlightTime(value){
   if(!value) return "Time N/A";
 
@@ -634,8 +666,15 @@ if(selectedReturnDate && selectedReturnDate < today){
   function renderCards(flights, tripType="Outbound"){
     return flights.map((f) => {
       const encoded = encodeURIComponent(JSON.stringify(f));
+      const available = Number.isFinite(Number(f.seatsRemaining)) ? Number(f.seatsRemaining) : null;
+      const seatCount = Number(lastQuery?.seatCount || 1);
+      const soldOut = available !== null && available <= 0;
+      const notEnough = available !== null && available < seatCount;
+      const availabilityText = available === null ? "Seats: N/A" : soldOut ? "Sold out" : `Available: ${available}`;
+      const buttonLabel = soldOut ? "Sold out" : notEnough ? `Need ${seatCount}` : `${tripType === "Outbound" ? "Select Outbound" : "Select Return"}`;
+      const buttonDisabled = soldOut || notEnough ? "disabled" : "";
       return `
-        <div class="result-card">
+        <div class="result-card ${soldOut ? "sold-out" : ""}">
           <div class="airline">
             <div class="logo">${String(f.segmentsAirlineName || "NA").slice(0,2).toUpperCase()}</div>
             <div>
@@ -648,13 +687,14 @@ if(selectedReturnDate && selectedReturnDate < today){
                 ${num(f.stops_est,0) === 0 ? "Direct" : `${num(f.stops_est)} stops`}
                 • <span class="pill">${Math.round(num(f.duration_mins,0))} mins</span>
                 • <span class="pill">${f.segmentsCabinCode || "cabin"}</span>
+                • <span class="pill">${availabilityText}</span>
               </div>
             </div>
           </div>
           <div class="price">
             <div class="amt">$${Math.round(num(f.pred_price,0))}</div>
             <div class="note">predicted</div>
-            <button class="book" onclick="selectFlight('${encoded}', '${tripType}')">${tripType === "Outbound" ? "Select Outbound" : "Select Return"}</button>
+            <button class="book" ${buttonDisabled} onclick="selectFlight('${encoded}', '${tripType}')">${buttonLabel}</button>
           </div>
         </div>
       `;
@@ -669,7 +709,7 @@ if(selectedReturnDate && selectedReturnDate < today){
     const sortedInbound = sortReal(inbound, currentSort);
     summaryEl.innerHTML = `
       <div><strong>${getAirportLabel(lastQuery.from)}</strong> → <strong>${getAirportLabel(lastQuery.to)}</strong></div>
-      <div>Depart: <strong>${lastQuery.date}</strong>${lastQuery.returnDate ? ` • Return: <strong>${lastQuery.returnDate}</strong>` : ""} • Stops: <strong>${lastQuery.stops >= 3 ? "2+" : lastQuery.stops}</strong> • Budget: <strong>$${lastQuery.maxPrice}</strong>${lastQuery.preferredAirline ? ` • Preferred airline: <strong>${lastQuery.preferredAirline}</strong>` : ""}</div>
+      <div>Depart: <strong>${lastQuery.date}</strong>${lastQuery.returnDate ? ` • Return: <strong>${lastQuery.returnDate}</strong>` : ""} • Seats: <strong>${lastQuery.seatCount}</strong> • Stops: <strong>${lastQuery.stops >= 3 ? "2+" : lastQuery.stops}</strong> • Budget: <strong>$${lastQuery.maxPrice}</strong>${lastQuery.preferredAirline ? ` • Preferred airline: <strong>${lastQuery.preferredAirline}</strong>` : ""}</div>
     `;
     if(!sortedOutbound.length){
       listEl.innerHTML = `<div class="result-card" style="justify-content:center;text-align:center;grid-column:1/-1;"><div><div style="font-weight:900;font-size:1.05rem">No flights found in dataset for this query</div><div class="meta">Try changing route, date, budget or stops.</div></div></div>`;
@@ -682,6 +722,13 @@ if(selectedReturnDate && selectedReturnDate < today){
 
   function selectFlight(encodedFlight, tripType){
     const flight = JSON.parse(decodeURIComponent(encodedFlight));
+    const seatCount = Number(lastQuery?.seatCount || 1);
+    const available = Number.isFinite(Number(flight.seatsRemaining)) ? Number(flight.seatsRemaining) : null;
+    if(available !== null && available < seatCount){
+      const verb = available <= 0 ? "This flight is sold out." : `Only ${available} seat(s) available for your ${seatCount} traveler(s).`;
+      alert(`${verb} Please select a different flight or lower the seat count.`);
+      return;
+    }
     if(tripType === "Outbound"){
       selectedOutbound = flight;
       if(lastQuery.returnDate){alert("Outbound selected. Now please select a return flight.");}
@@ -698,13 +745,44 @@ if(selectedReturnDate && selectedReturnDate < today){
   function openBookingModal(){
     selectedSeats = [];
     const passengerCountEl = document.getElementById("passengerCount");
-    if(passengerCountEl) passengerCountEl.value = "1";
+    if(passengerCountEl) passengerCountEl.value = String(lastQuery?.seatCount || 1);
     document.getElementById("bookingSuccess").style.display = "none";
     renderPassengerFields();
     renderSeatGrid();
     renderBookingSummary();
     document.getElementById("bookingModal").style.display = "flex";
   }
+
+  // Stepper control: change seat count for home/search and sync across inputs
+  function changeSeatCount(delta, suffix){
+    const id = 'seatCount' + (suffix || '');
+    const el = document.getElementById(id);
+    if(!el) return;
+    let n = Number((el.value || '').replace(/\D/g,'')) || 0;
+    n = n + Number(delta);
+    if(n < 1) n = 1;
+    el.value = String(n);
+    // sync both inputs when changing from home
+    const other = document.getElementById('seatCount' + (suffix === '2' ? '' : '2'));
+    if(other) other.value = el.value;
+    // if booking modal open, update passengerCount
+    const passengerCountEl = document.getElementById('passengerCount');
+    if(passengerCountEl) passengerCountEl.value = String(n);
+    // update booking summary if modal open
+    renderBookingSummary();
+  }
+
+  // allow typing into seat inputs and sanitize
+  document.addEventListener('input', function(e){
+    if(e.target && (e.target.id === 'seatCount' || e.target.id === 'seatCount2')){
+      const v = (e.target.value || '').replace(/\D/g,'');
+      e.target.value = v === '' ? '1' : v;
+      // sync other
+      const otherId = e.target.id === 'seatCount' ? 'seatCount2' : 'seatCount';
+      const other = document.getElementById(otherId);
+      if(other) other.value = e.target.value;
+    }
+  });
   function closeBookingModal(){document.getElementById("bookingModal").style.display = "none";}
 
   function renderBookingSummary(){
@@ -740,7 +818,9 @@ if(selectedReturnDate && selectedReturnDate < today){
 
   function renderSeatGrid(){
     const seatGrid = document.getElementById("seatGrid");
+    const statusEl = document.getElementById("seatStatus");
     if(!seatGrid) return;
+    const seatCount = Number(document.getElementById("passengerCount")?.value || 1);
     const seats = ["1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F","4A","4B","4C","4D","4E","4F"];
     const booked = ["1C","2D","3A"];
     seatGrid.innerHTML = seats.map(seat => {
@@ -748,6 +828,9 @@ if(selectedReturnDate && selectedReturnDate < today){
       const isSelected = selectedSeats.includes(seat);
       return `<button type="button" class="seat ${isBooked ? "booked" : ""} ${isSelected ? "selected" : ""}" ${isBooked ? "disabled" : ""} onclick="toggleSeat('${seat}')">${seat}</button>`;
     }).join("");
+    if(statusEl){
+      statusEl.textContent = `Select ${seatCount} seat${seatCount === 1 ? "" : "s"}. ${selectedSeats.length} selected so far.`;
+    }
   }
 
   function toggleSeat(seat){
@@ -764,27 +847,9 @@ if(selectedReturnDate && selectedReturnDate < today){
 }
 
 function isValidCardNumber(cardNumber){
-  const digits = cardNumber.replace(/\D/g, ""); // remove spaces
-
-  if(!/^\d{16}$/.test(digits)) return false;
-  if(!/^(4|5[1-5])/.test(digits)) return false;
-
-  let sum = 0;
-  let shouldDouble = false;
-
-  for(let i = digits.length - 1; i >= 0; i--){
-    let digit = Number(digits[i]);
-
-    if(shouldDouble){
-      digit *= 2;
-      if(digit > 9) digit -= 9;
-    }
-
-    sum += digit;
-    shouldDouble = !shouldDouble;
-  }
-
-  return sum % 10 === 0;
+  const digits = cardNumber.replace(/\D/g, "");
+  // accept any non-empty card number up to 16 digits
+  return digits.length > 0 && digits.length <= 16;
 }
 
 function isValidExpiry(expiry){
@@ -834,7 +899,7 @@ function confirmBooking(){
     return;
   }
   if(!isValidCardNumber(cardNumber)){
-    alert("Enter valid Visa or Mastercard number (16 digits).");
+    alert("Enter a valid card number (up to 16 digits).");
     return;
   }
   if(!isValidExpiry(cardExpiry)){
@@ -892,7 +957,7 @@ const navSearchLink = document.getElementById("navSearch");
 
   if(cardInput){
     cardInput.addEventListener("input", function(e){
-      let value = e.target.value.replace(/\D/g, "").substring(0, 19);
+      let value = e.target.value.replace(/\D/g, "").substring(0, 16); // cap digits to 16
       e.target.value = value.replace(/(\d{4})(?=\d)/g, "$1 ");
     });
   }
