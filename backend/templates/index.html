@@ -973,6 +973,30 @@ const navSearchLink = document.getElementById("navSearch");
       e.target.value = value;
     });
   }
+
+  // Ensure date inputs have a usable default (today) so validation works on first search
+  try{
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const iso = `${yyyy}-${mm}-${dd}`;
+    ['date','date2'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el){
+        if(!el.value) {
+          el.value = iso;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        el.min = iso; // prevent picking past dates
+      }
+    });
+    ['returnDate','returnDate2'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.min = iso;
+    });
+  }catch(e){console.warn('Failed to set default dates', e)}
 });
 </script>
 </body>
