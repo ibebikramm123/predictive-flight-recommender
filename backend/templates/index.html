@@ -561,8 +561,18 @@
 
     const from = (fromEl?.value || "").trim().toUpperCase();
     const to = (toEl?.value || "").trim().toUpperCase();
-    const date = dateEl?.value || "";
-    const returnDate = returnDateEl?.value || "";
+    // read input value robustly (handles prefilled UI values that may not have fired input events)
+    function readInputValue(el){
+      if(!el) return "";
+      const v = (el.value || "").toString().trim();
+      if(v) return v;
+      try{ const attr = el.getAttribute && el.getAttribute('value'); if(attr) return attr.toString().trim(); }catch(e){}
+      if(el.defaultValue) return el.defaultValue.toString().trim();
+      return "";
+    }
+
+    const date = readInputValue(dateEl) || "";
+    const returnDate = readInputValue(returnDateEl) || "";
     const seatCount = Number((seatCountEl?.value || "1").replace(/\D/g,'')) || 1;
     const stops = stopsEl?.value;
     const preferredAirline = (airlineEl?.value || "").trim();
@@ -573,21 +583,28 @@
     if(from === to){errEl.textContent = "Origin and destination cannot be the same."; return;}
     if(!date){errEl.textContent = "Choose a departure date."; return;}
     const today = new Date();
-today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
 
-const selectedDate = new Date(date);
+    function parseLocalDate(dstr){
+      if(!dstr) return null;
+      const ymd = /^\s*(\d{4})-(\d{2})-(\d{2})\s*$/.exec(dstr);
+      if(ymd) return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]));
+      const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dstr);
+      if(dmy) return new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
+      const dd = new Date(dstr);
+      return isNaN(dd) ? null : dd;
+    }
 
-if(selectedDate < today){
-  errEl.textContent = "Departure date cannot be in the past.";
-  return;
-}
-    if(returnDate && returnDate < date){errEl.textContent = "Return date must be on or after departure date."; return;}
-    const selectedReturnDate = returnDate ? new Date(returnDate) : null;
+    const selectedDate = parseLocalDate(date);
+    if(!selectedDate){ errEl.textContent = "Choose a valid departure date."; return; }
+    if(selectedDate < today){ errEl.textContent = "Departure date cannot be in the past."; return; }
 
-if(selectedReturnDate && selectedReturnDate < today){
-  errEl.textContent = "Return date cannot be in the past.";
-  return;
-}
+    if(returnDate){
+      const selectedReturnDate = parseLocalDate(returnDate);
+      if(!selectedReturnDate){ errEl.textContent = "Return date format is invalid."; return; }
+      if(selectedReturnDate < selectedDate){ errEl.textContent = "Return date must be on or after departure date."; return; }
+      if(selectedReturnDate < today){ errEl.textContent = "Return date cannot be in the past."; return; }
+    }
     if(!seatCount || seatCount < 1){errEl.textContent = "Enter a valid seat count of at least 1."; return;}
     if(!maxPrice || maxPrice < 100){errEl.textContent = "Select a max price using the slider."; return;}
 
